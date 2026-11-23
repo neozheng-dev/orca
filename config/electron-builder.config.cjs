@@ -6,6 +6,9 @@ const {
   applyMacHelperFolderUsageDescriptions
 } = require('./scripts/desktop-distribution/macos/macos-folder-usage-descriptions.cjs')
 const {
+  MACOS_LOCAL_NETWORK_USAGE_DESCRIPTION
+} = require('./scripts/desktop-distribution/macos/macos-local-network-usage-description.cjs')
+const {
   giveMacExecutableUniqueUuid
 } = require('./scripts/desktop-distribution/macos/macos-executable-uuid.cjs')
 const electronBuilderNativeRebuild = require('./scripts/desktop-distribution/runtime-verification/electron-builder-native-rebuild.cjs')
@@ -251,8 +254,7 @@ const macUsageDescriptions = {
     'Orca allows terminal-launched developer tools to access your contacts when you request it.',
   NSLocationUsageDescription:
     'Orca allows terminal-launched developer tools to access location when you request it.',
-  NSLocalNetworkUsageDescription:
-    'Orca allows terminal-launched developer tools to discover and connect to local development servers when you request it.',
+  NSLocalNetworkUsageDescription: MACOS_LOCAL_NETWORK_USAGE_DESCRIPTION,
   NSMicrophoneUsageDescription: "Application requests access to the device's microphone.",
   NSRemindersUsageDescription:
     'Orca allows terminal-launched developer tools to access your reminders when you request it.',

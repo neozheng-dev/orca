@@ -1,6 +1,8 @@
 // Keep all signed Info.plist values branch-invariant: ad-hoc cdhash is the Keychain ACL identity, so branch drift re-prompts for passwords.
 // Branch Dock names belong in the unsigned .app directory name.
 
+import localNetworkUsage from '../../desktop-distribution/macos/macos-local-network-usage-description.cjs'
+
 export const DEV_BUNDLE_ID = 'com.stablyai.orca.dev'
 export const DEV_HELPER_BUNDLE_ID = `${DEV_BUNDLE_ID}.helper`
 // Fixed display name distinguishes dev notifications from other Electron apps without branch-specific signature drift.
@@ -11,7 +13,11 @@ export function getDevBundlePlistPatches() {
   return [
     { key: 'CFBundleIdentifier', value: DEV_BUNDLE_ID },
     { key: 'CFBundleName', value: DEV_BUNDLE_DISPLAY_NAME },
-    { key: 'CFBundleDisplayName', value: DEV_BUNDLE_DISPLAY_NAME }
+    { key: 'CFBundleDisplayName', value: DEV_BUNDLE_DISPLAY_NAME },
+    {
+      key: 'NSLocalNetworkUsageDescription',
+      value: localNetworkUsage.MACOS_LOCAL_NETWORK_USAGE_DESCRIPTION
+    }
   ]
 }
 
