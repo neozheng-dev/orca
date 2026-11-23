@@ -41,14 +41,24 @@ function botAgentOnHost(
 }
 
 /** Whether the user has `agent` here: the menu's rows already leave out agents disabled in Agent
- *  settings, and a chat that only offers to install the agent first doesn't count. */
-function botAgentEnabledOnHost(agent: BotAgent, rows: readonly NewTabAgentMenuRow[]): boolean {
-  return rows.some((row) => row.agent === agent && !(row.kind === 'chat' && row.setup))
+ *  settings; a chat that only offers to install the agent first doesn't count, nor does an
+ *  unavailable chat for an agent this host doesn't have. */
+function botAgentEnabledOnHost(
+  agent: BotAgent,
+  model: Extract<BotAgentMenuModel, { state: 'settled' }>
+): boolean {
+  return model.rows.some(
+    (row) =>
+      row.agent === agent &&
+      (row.kind === 'chat-unavailable'
+        ? model.detection.detectedIds?.includes(agent) === true
+        : !(row.kind === 'chat' && row.setup))
+  )
 }
 
 /** The bot's own agent first, then every other agent enabled here; each unavailable one says why,
- *  as agent rows do. With none enabled, the bot's own agent as it stands here, so the list is never
- *  empty. Only the bot's own while the menu is still learning the host. */
+ *  as agent rows do. When none of those can start, the bot's own agent as it stands here leads, so
+ *  the list always offers it. Only the bot's own while the menu is still learning the host. */
 export function botNewChatAgents(
   bot: Pick<Bot, 'agent'>,
   model: BotAgentMenuModel
@@ -57,10 +67,13 @@ export function botNewChatAgents(
     return [{ agent: bot.agent }]
   }
   const enabled = [bot.agent, ...BOT_AGENTS.filter((agent) => agent !== bot.agent)]
-    .filter((agent) => botAgentEnabledOnHost(agent, model.rows))
+    .filter((agent) => botAgentEnabledOnHost(agent, model))
     .map((agent) => botAgentOnHost(agent, model))
     .filter((entry) => entry.unavailable !== 'not-installed')
-  return enabled.length > 0 ? enabled : [botAgentOnHost(bot.agent, model)]
+  if (enabled.some((entry) => !entry.unavailable)) {
+    return enabled
+  }
+  return [botAgentOnHost(bot.agent, model), ...enabled.filter((entry) => entry.agent !== bot.agent)]
 }
 
 /** The agents a bot can be set to here: the installed ones, and `current` always; empty while the

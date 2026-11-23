@@ -54,4 +54,18 @@ describe('botNewChatAgents', () => {
       { agent: 'claude', unavailable: 'check-failed' }
     ])
   })
+
+  it('never leaves only unavailable rows: the bot’s own agent still leads', () => {
+    const rows: NewTabAgentMenuRow[] = [
+      { kind: 'chat', agent: 'claude', setup: true },
+      { kind: 'chat-unavailable', agent: 'cursor', reason: 'not-on-host' }
+    ]
+    // An unavailable chat for an agent the host doesn't have isn't one the user has.
+    expect(botNewChatAgents({ agent: 'claude' }, settled(rows, []))).toEqual([{ agent: 'claude' }])
+    // One the host has keeps its reason, after the bot's own agent.
+    expect(botNewChatAgents({ agent: 'claude' }, settled(rows, ['cursor']))).toEqual([
+      { agent: 'claude' },
+      { agent: 'cursor', unavailable: 'not-on-host' }
+    ])
+  })
 })

@@ -61,20 +61,36 @@ const rows: NewTabAgentMenuRow[] = [
   { kind: 'chat-unavailable', agent: 'cursor', reason: 'not-on-host' },
   { kind: 'cli', agent: 'opencode', chat: true }
 ]
-const model: NewTabAgentMenuModel = {
-  state: 'settled',
-  rows,
-  detection: {
-    detectedIds: ['claude', 'codex', 'cursor', 'opencode', 'gemini'],
-    isLoading: false,
-    detectionFailed: false,
-    isRefreshing: false,
-    needsServerUpdate: false,
-    refresh: async () => []
+function settledModel(rows: NewTabAgentMenuRow[], detectedIds: TuiAgent[]): NewTabAgentMenuModel {
+  return {
+    state: 'settled',
+    rows,
+    detection: {
+      detectedIds,
+      isLoading: false,
+      detectionFailed: false,
+      isRefreshing: false,
+      needsServerUpdate: false,
+      refresh: async () => []
+    }
   }
 }
+const model = settledModel(rows, ['claude', 'codex', 'cursor', 'opencode', 'gemini'])
+// A host with none of the agents: the bot's own only offers setup, and Cursor's chat isn't there.
+const mixedModel = settledModel(
+  [
+    { kind: 'chat', agent: 'claude', setup: true },
+    ...SETUP_ONLY.slice(0, 4).map((agent) => ({
+      kind: 'chat' as const,
+      agent,
+      setup: true as const
+    })),
+    { kind: 'chat-unavailable', agent: 'cursor', reason: 'not-on-host' }
+  ],
+  []
+)
 
-function menuCase(width: number) {
+function menuCase(width: number, menuModel: NewTabAgentMenuModel = model) {
   return defineFixture({
     width: width + 40,
     render: () => (
@@ -83,7 +99,7 @@ function menuCase(width: number) {
           <DropdownMenu defaultOpen modal={false}>
             <DropdownMenuTrigger>New</DropdownMenuTrigger>
             <DropdownMenuContent align="start" style={{ width }}>
-              <BotNewChatMenuItems bot={bot} model={model} />
+              <BotNewChatMenuItems bot={bot} model={menuModel} />
               <DropdownMenuSeparator />
               <OpenAgentSettingsMenuItem variant="create" />
             </DropdownMenuContent>
@@ -96,3 +112,4 @@ function menuCase(width: number) {
 
 export const narrow = menuCase(260)
 export const wide = menuCase(420)
+export const noneEnabled = menuCase(420, mixedModel)
